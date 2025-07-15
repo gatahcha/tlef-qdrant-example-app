@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TLEF Qdrant Example</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>TLEF Qdrant Example</h1>
+        </header>
+
+        <main>
+            <div class="card">
+                <h2>Add & Search</h2>
+                <form class="form-group" id="add-document-form">
+                    <label for="new-document-text" class="sr-only">Document Text</label>
+                    <textarea id="new-document-text" rows="4" placeholder="Enter text to add as a new document..."></textarea>
+                    <button type="submit">Add Document</button>
+                </form>
+                <form class="form-group" id="search-form">
+                    <label for="search-query-text" class="sr-only">Search Query</label>
+                    <textarea id="search-query-text" rows="2" placeholder="Enter text to search for similar documents..."></textarea>
+                    <button type="submit">Search</button>
+                </form>
+                <div id="search-results-container">
+                    <h3>Search Results</h3>
+                    <ul id="search-results" class="document-list"></ul>
+                </div>
+            </div>
+            <div class="card">
+                <h2>All Documents</h2>
+                <ul id="all-documents" class="document-list"></ul>
+            </div>
+        </main>
+        <footer>
+            <p></p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
