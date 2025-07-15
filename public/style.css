@@ -69,8 +69,6 @@ footer {
     text-align: center;
     margin-top: 3rem;
     padding-top: 1rem;
-    border-top: 1px solid var(--border-color);
-    color: #6c757d;
 }
 
 main {
@@ -96,6 +94,7 @@ main {
 .form-group {
     display: flex;
     flex-direction: column;
+    margin-bottom: 2rem;
 }
 
 .form-group textarea {
