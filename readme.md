@@ -4,8 +4,6 @@ This project is a full-stack JavaScript application designed to demonstrate how 
 
 It features a vanilla JavaScript frontend and an Express.js backend. The application allows users to input text, which is then converted into vector embeddings using the `nomic-embed-text` model (served via Ollama) and the `ubc-genai-toolkit-embeddings` library. These embeddings are then stored and searched within a local Qdrant instance.
 
-This application serves as an educational tool for junior developers to understand the fundamentals of building a generative AI-powered application.
-
 ## Features
 
 -   **Add Documents**: Input text to be converted into embeddings and stored in Qdrant.
@@ -39,7 +37,7 @@ Before you begin, ensure you have the following installed and running:
 1.  **Clone the Repository**:
 
     ```bash
-    git clone <repository-url>
+    git clone https://github.com/ubc/tlef-qdrant-example-app
     cd tlef-qdrant-example-app
     ```
 
