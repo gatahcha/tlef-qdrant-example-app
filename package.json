@@ -17,9 +17,12 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
+    "ubc-genai-toolkit-chunking": "^0.1.0",
     "ubc-genai-toolkit-core": "^0.1.0",
+    "ubc-genai-toolkit-document-parsing": "^0.1.0",
     "ubc-genai-toolkit-embeddings": "^0.1.0",
-    "ubc-genai-toolkit-llm": "^0.1.0"
+    "ubc-genai-toolkit-llm": "^0.1.0",
+    "ubc-genai-toolkit-rag": "^0.1.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

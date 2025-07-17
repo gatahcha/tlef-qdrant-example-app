@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
     const API_BASE_URL = '/api';
-
     // --- Form Elements ---
     const addDocumentForm = document.getElementById('add-document-form');
     const newDocumentText = document.getElementById('new-document-text');
@@ -12,8 +11,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchResultsContainer = document.getElementById('search-results');
     const allDocumentsContainer = document.getElementById('all-documents');
 
-    // --- Helper Functions ---
+    // --- Corpus configuration ---
+    const corpusConfigbtn = document.getElementById('configure-corpus-btn')
+    const corpusConfigContainer = document.getElementById('configure-corpus-form')
+    let corpusConfig = {
+        chunkingSize: 10,
+        overlapSize: 10
+    }
 
+    // --- Helper Functions ---
     const showPlaceholder = (container, message) => {
         container.innerHTML = `<li class="placeholder">${message}</li>`;
     };
@@ -168,9 +174,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { once: true });
     });
 
+    corpusConfigbtn.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        if ( corpusConfigContainer.style.display === 'none') {
+            corpusConfigContainer.style.display = 'flex';
+            corpusConfigbtn.textContent = 'Hide configuration';
+        }
+        else {
+            corpusConfigContainer.style.display = 'none';
+            this.textContent = 'Edit configuration';
+        }
+    })
+
 
     // --- Initial Load ---
-    addDocumentBtn.disabled = true;
+    showCorpusConfig = false;
+    document.getElementById('chunking-size').value = corpusConfig.chunkingSize;
+    document.getElementById('overlap-size').value = corpusConfig.overlapSize;
     fetchAndRenderAllDocuments();
     showPlaceholder(searchResultsContainer, 'Search results will appear here.');
 });
