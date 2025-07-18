@@ -12,12 +12,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const allDocumentsContainer = document.getElementById('all-documents');
 
     // --- Corpus configuration ---
-    const corpusConfigbtn = document.getElementById('configure-corpus-btn')
-    const corpusConfigContainer = document.getElementById('configure-corpus-form')
+    const corpusConfigbtn = document.getElementById('configure-corpus-btn');
+    const corpusConfigContainer = document.getElementById('configure-corpus-form');
+    const corpusConfigSubmit = document.getElementById('configure-corpus-submit-button');
+    const chunkingSizeColumn = document.getElementById('chunking-size');
+    const overlapSizeColumn = document.getElementById('overlap-size');
+
     let corpusConfig = {
         chunkingSize: 10,
         overlapSize: 10
     }
+
+    const fetchCorpusInfo = async () => {
+        //fetch data about chunking sizer and overlap size
+        const responseConfig = await fetch(`${API_BASE_URL}/documents/corpus-configuration`, {
+            method : 'GET',
+            headers : { 'Content-type' : 'application/json'},
+            body : JSON.stringify()
+        });
+        if (!responseConfig.ok) throw new Error('Failed to fetch corpus config');
+        responseConfig.json()
+            .then(result => {
+                console.log(result.config);
+                corpusConfig.chunkingSize = parseInt(result.config.chunkingSize);
+                corpusConfig.overlapSize = parseInt(result.config.overlapSize);
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    }
+
 
     // --- Helper Functions ---
     const showPlaceholder = (container, message) => {
@@ -70,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Failed to fetch documents');
             const documents = await response.json();
             renderDocuments(allDocumentsContainer, documents);
+
         } catch (error) {
             console.error('Error fetching documents:', error);
             showPlaceholder(allDocumentsContainer, 'Error loading documents.');
@@ -180,6 +205,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if ( corpusConfigContainer.style.display === 'none') {
             corpusConfigContainer.style.display = 'flex';
             corpusConfigbtn.textContent = 'Hide configuration';
+            chunkingSizeColumn.value = corpusConfig.chunkingSize;
+            overlapSizeColumn.value = corpusConfig.overlapSize;
+            console.log(corpusConfig);
         }
         else {
             corpusConfigContainer.style.display = 'none';
@@ -187,11 +215,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })
 
+    corpusConfigSubmit.addEventListener('click', async (e) => {
+        e.preventDefault();
+
+        const uploadConfig = {
+            chunkingSize : chunkingSizeColumn.value.trim(),
+            overlapSize : overlapSizeColumn.value.trim()
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/documents/corpus-configuration`, {
+                method : 'POST',
+                headers : { 'Content-type' : 'application/json'},
+                body : JSON.stringify({helo : 'helo'})
+            });
+            if (!response.ok) throw new Error("failed to change corpus configuration");
+            else {
+                const result = await response.json();
+                corpusConfig.chunkingSize = result.chunkingSize;
+                corpusConfig.overlapSize = result.overlapSize;
+            }
+        }
+        catch (error) {
+            console.error('error modifiying chungking size : ', error);
+            alert(error);
+        } 
+    })
 
     // --- Initial Load ---
     showCorpusConfig = false;
-    document.getElementById('chunking-size').value = corpusConfig.chunkingSize;
-    document.getElementById('overlap-size').value = corpusConfig.overlapSize;
+    fetchCorpusInfo();
     fetchAndRenderAllDocuments();
     showPlaceholder(searchResultsContainer, 'Search results will appear here.');
 });

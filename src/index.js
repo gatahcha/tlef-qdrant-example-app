@@ -7,12 +7,24 @@ import { QdrantClient } from '@qdrant/js-client-rest';
 import { EmbeddingsModule } from 'ubc-genai-toolkit-embeddings';
 import { ConsoleLogger } from 'ubc-genai-toolkit-core';
 import { randomUUID } from 'crypto';
+import { ChunkingModule } from 'ubc-genai-toolkit-chunking';
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 6340;
+
+//setting up retrival setting
+//fill this
+
+let corpusConfig = {
+    chunkingSize : 1000,
+    overlapSize: 200
+}
+
+let chunkingConfig = new ChunkingModule();
+
 
 const qdrantClient = new QdrantClient({
     url: process.env.QDRANT_URL,
@@ -150,6 +162,43 @@ app.delete('/api/documents/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to delete document.' });
     }
 });
+
+//modify chunking size
+app.post('/api/documents/corpus-configuration', async (req, res) => {
+    try {
+        let { config } = req.body;
+        console.log(config);
+        if (!config ){
+            console.log('config properties should be a number or exists');
+            return res.status(400).json({error : 'config properties should be a number or exists'});
+        }
+
+        corpusConfig.chunkingSize = config.chunkingSize;
+        corpusConfig.overlapSize = config.overlapSize;
+
+        console.log(`modifying corpus configuration : chunking size :${corpusConfig.chunkingSize}; overlap size : ${corpusConfig.overlapSize}`);
+        res.status(200).json({corpusConfig});
+    }
+    catch (error) {
+        console.log('error in sending courpus configuration');
+        res.status(500).json({error : 'failed to send corpus configuration'});
+    }
+})
+
+app.get('/api/documents/corpus-configuration', async (req, res) => {
+    try {
+        let config = {
+            chunkingSize : corpusConfig.chunkingSize,
+            overlapSize : corpusConfig.overlapSize
+        }
+        console.log('information about corpus config is sent');
+        res.status(200).json({config});
+    }
+    catch (error) {
+        console.log('error in sending courpus configuration');
+        res.status(500).json({error : 'failed to send corpus configuration'});
+    }
+})
 
 app.post('/api/search', async (req, res) => {
     try {
