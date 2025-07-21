@@ -208,18 +208,29 @@ app.post('/api/documents/corpus-configuration', async (req, res) => {
             return res.status(400).json({error : 'config properties should be a number or exists'});
         }
 
-        corpusConfig.chunkingSize = config.chunkingSize;
-        corpusConfig.overlapSize = config.overlapSize;
+        const configResult = {
+            chunkingSize : parseInt(config.chunkingSize),
+            overlapSize : parseInt(config.overlapSize)
+        }
 
+        if (configResult.overlapSize >= configResult.chunkingSize) {
+            console.log('ERROR: Overlap >= chunk size');
+            return res.status(400).json({
+                error: `Overlap size (${config.overlapSize}) must be less than chunk size (${config.chunkingSize})`
+            });
+        }
+
+        corpusConfig.chunkingSize = configResult.chunkingSize;
+        corpusConfig.overlapSize = configResult.overlapSize;
+
+        
         let customOption = { // data type : partial<chunkingConfig>
             strategy : 'token',
             defaultOptions : {
-                chunkSize : config.chunkingSize,
-                chunkOverlap : config.overlapSize,
+                chunkSize : corpusConfig.chunkingSize,
+                chunkOverlap : corpusConfig.overlapSize,
             }
         }
-
-        console.log(customOption);
 
         corpusModule = new ChunkingModule(customOption);
 

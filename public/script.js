@@ -125,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Failed to add document');
 
             const newDocument = await response.json();
-            console.log(newDocument);
 
             newDocumentText.value = '';
             addDocumentBtn.disabled = true;
@@ -135,13 +134,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 placeholder.remove();
             }
 
-            const li = createDocumentElement(newDocument, false);
-            li.classList.add('item-entering');
-            li.addEventListener('animationend', () => {
-                li.classList.remove('item-entering');
-            }, { once: true });
+            const documentChunks = newDocument.points; // look at here
 
-            allDocumentsContainer.prepend(li);
+            for (const chunk of documentChunks){
+                console.log(chunk)
+                const li = createDocumentElement(chunk, false);
+                li.classList.add('item-entering');
+                li.addEventListener('animationend', () => {
+                    li.classList.remove('item-entering');
+                }, { once: true });
+
+                allDocumentsContainer.prepend(li);
+            }
 
         } catch (error) {
             console.error('Error adding document:', error);
