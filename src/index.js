@@ -8,6 +8,7 @@ import { EmbeddingsModule } from 'ubc-genai-toolkit-embeddings';
 import { ConsoleLogger } from 'ubc-genai-toolkit-core';
 import { randomUUID } from 'crypto';
 import { ChunkingModule } from 'ubc-genai-toolkit-chunking';
+import { timeStamp } from 'console';
 
 // Load environment variables
 dotenv.config();
@@ -23,7 +24,15 @@ let corpusConfig = {
     overlapSize: 200
 }
 
-let chunkingConfig = new ChunkingModule();
+let defaultOption = { // data type : partial<chunkingConfig>
+    strategy : 'token',
+    defaultOptions : {
+        chunkSize : corpusConfig.chunkingSize,
+        chunkOverlap : corpusConfig.overlapSize,
+    }
+}
+
+let corpusModule = new ChunkingModule(defaultOption);
 
 
 const qdrantClient = new QdrantClient({
@@ -106,22 +115,48 @@ app.post('/api/documents', async (req, res) => {
             return res.status(400).json({ error: 'Text is required and must be a string.' });
         }
 
-        const [embedding] = await embeddingsModule.embed(text);
-        const id = randomUUID();
-        const payload = { text, timestamp: new Date().toISOString() };
+        const documents = {
+            content : text,
+            metadata : {
+                sourceId : randomUUID(),
+                timeStamp : new Date().toISOString()
+            }
+        }
+
+        console.log(corpusConfig);
+
+        const chunkResponse = await corpusModule.chunkDocuments([documents]);
+        const chunks = chunkResponse.chunks;
+
+        //uses batch processing, make the process more efficient than sequential processing
+        const chunkTexts = chunks.map( chunk => chunk.text );
+        const embeddings = await embeddingsModule.embed(chunkTexts);
+
+        const points = chunks.map( (chunk, index) => ({
+            id : randomUUID(),
+            vector : embeddings[index],
+            payload : {
+                text : chunk.text,
+                chunkNumber : chunk.metadata.chunkNumber,
+                timestamp : new Date().toISOString(),
+                sourceID : chunk.metadata.sourceDocumentMetadata,
+                characterLength : chunk.metadata.characterLength,
+            }
+        }) );
 
         await qdrantClient.upsert(collectionName, {
-            wait: true,
-            points: [
-                {
-                    id: id,
-                    vector: embedding,
-                    payload: payload,
-                },
-            ],
-        });
+            wait : true,
+            points : points
+        })
 
-        res.status(201).json({ id, payload });
+        res.status(201).json({
+            message: 'Document chunked and stored successfully',
+            chunksCreated: points.length,
+            sourceId: documents.metadata.sourceId,
+            strategy: chunkResponse.strategy,
+            points: points.map(p => ({ id: p.id, payload: p.payload }))
+        })
+
     } catch (error) {
         console.error('Error creating document:', error);
         res.status(500).json({ error: 'Failed to create document.' });
@@ -167,7 +202,7 @@ app.delete('/api/documents/:id', async (req, res) => {
 app.post('/api/documents/corpus-configuration', async (req, res) => {
     try {
         let { config } = req.body;
-        console.log(config);
+        console.log(config); // why the config is undefined ?
         if (!config ){
             console.log('config properties should be a number or exists');
             return res.status(400).json({error : 'config properties should be a number or exists'});
@@ -175,6 +210,18 @@ app.post('/api/documents/corpus-configuration', async (req, res) => {
 
         corpusConfig.chunkingSize = config.chunkingSize;
         corpusConfig.overlapSize = config.overlapSize;
+
+        let customOption = { // data type : partial<chunkingConfig>
+            strategy : 'token',
+            defaultOptions : {
+                chunkSize : config.chunkingSize,
+                chunkOverlap : config.overlapSize,
+            }
+        }
+
+        console.log(customOption);
+
+        corpusModule = new ChunkingModule(customOption);
 
         console.log(`modifying corpus configuration : chunking size :${corpusConfig.chunkingSize}; overlap size : ${corpusConfig.overlapSize}`);
         res.status(200).json({corpusConfig});
@@ -191,6 +238,7 @@ app.get('/api/documents/corpus-configuration', async (req, res) => {
             chunkingSize : corpusConfig.chunkingSize,
             overlapSize : corpusConfig.overlapSize
         }
+
         console.log('information about corpus config is sent');
         res.status(200).json({config});
     }

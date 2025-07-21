@@ -28,18 +28,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const responseConfig = await fetch(`${API_BASE_URL}/documents/corpus-configuration`, {
             method : 'GET',
             headers : { 'Content-type' : 'application/json'},
-            body : JSON.stringify()
         });
         if (!responseConfig.ok) throw new Error('Failed to fetch corpus config');
-        responseConfig.json()
-            .then(result => {
-                console.log(result.config);
-                corpusConfig.chunkingSize = parseInt(result.config.chunkingSize);
-                corpusConfig.overlapSize = parseInt(result.config.overlapSize);
-            })
-            .catch(error => {
-                console.log(error);
-            });
+
+        try {
+            const result = await responseConfig.json();
+            console.log(result.config);
+            corpusConfig.chunkingSize = parseInt(result.config.chunkingSize);
+            corpusConfig.overlapSize = parseInt(result.config.overlapSize);
+        }
+        catch (e){
+            console.error("response config error : ", e)
+        }
+
     }
 
 
@@ -124,6 +125,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Failed to add document');
 
             const newDocument = await response.json();
+            console.log(newDocument);
+
             newDocumentText.value = '';
             addDocumentBtn.disabled = true;
 
@@ -203,22 +206,25 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         if ( corpusConfigContainer.style.display === 'none') {
-            corpusConfigContainer.style.display = 'flex';
-            corpusConfigbtn.textContent = 'Hide configuration';
-            chunkingSizeColumn.value = corpusConfig.chunkingSize;
-            overlapSizeColumn.value = corpusConfig.overlapSize;
-            console.log(corpusConfig);
+            fetchCorpusInfo()
+                .then( () => {
+                    chunkingSizeColumn.value = corpusConfig.chunkingSize;
+                    overlapSizeColumn.value = corpusConfig.overlapSize;
+                    console.log(corpusConfig);
+                    corpusConfigContainer.style.display = 'flex';
+                    corpusConfigbtn.textContent = 'Hide configuration';
+                } );
         }
         else {
             corpusConfigContainer.style.display = 'none';
-            this.textContent = 'Edit configuration';
+            corpusConfigbtn.textContent = 'Edit configuration';
         }
     })
 
     corpusConfigSubmit.addEventListener('click', async (e) => {
         e.preventDefault();
 
-        const uploadConfig = {
+        const config = {
             chunkingSize : chunkingSizeColumn.value.trim(),
             overlapSize : overlapSizeColumn.value.trim()
         };
@@ -227,9 +233,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch(`${API_BASE_URL}/documents/corpus-configuration`, {
                 method : 'POST',
                 headers : { 'Content-type' : 'application/json'},
-                body : JSON.stringify({helo : 'helo'})
+                body : JSON.stringify({config})
             });
-            if (!response.ok) throw new Error("failed to change corpus configuration");
+            if (!response.ok) throw new Error("failed to change corpus configuration"); // why this response failed
             else {
                 const result = await response.json();
                 corpusConfig.chunkingSize = result.chunkingSize;
